@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그림 그리기</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="undoButton">되돌리기</button>
+    </div>
+    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const undoButton = document.getElementById('undoButton');
+
+        let isDrawing = false;
+        let x = 0;
+        let y = 0;
+        let paths = [];
+        let currentPath = [];
+
+        canvas.addEventListener('mousedown', (e) => {
+            x = e.offsetX;
+            y = e.offsetY;
+            isDrawing = true;
+            currentPath = [{ x, y }];
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing === true) {
+                drawLine(ctx, x, y, e.offsetX, e.offsetY);
+                x = e.offsetX;
+                y = e.offsetY;
+                currentPath.push({ x, y });
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (isDrawing === true) {
+                drawLine(ctx, x, y, e.offsetX, e.offsetY);
+                x = 0;
+                y = 0;
+                isDrawing = false;
+                paths.push([...currentPath]);
+                currentPath = [];
+            }
+        });
+
+        undoButton.addEventListener('click', () => {
+            if (paths.length > 0) {
+                paths.pop();
+                redraw();
+            }
+        });
+
+        function drawLine(ctx, x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const path of paths) {
+                for (let i = 0; i < path.length - 1; i++) {
+                    drawLine(ctx, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
