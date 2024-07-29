@@ -7,36 +7,46 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background: linear-gradient(to bottom, #f0f0f0, #a0a0a0);
         }
         canvas {
             border: 1px solid black;
+            background-color: white;
         }
         #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div id="controls">
         <button id="undoButton">되돌리기</button>
+        <button id="redoButton">되돌린 걸 되돌리기</button>
+        <button id="saveButton">저장</button>
+        <input type="color" id="colorPicker" value="#000000">
+        <input type="range" id="brushSize" min="1" max="10" value="2">
     </div>
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
         const undoButton = document.getElementById('undoButton');
+        const redoButton = document.getElementById('redoButton');
+        const saveButton = document.getElementById('saveButton');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSize = document.getElementById('brushSize');
 
         let isDrawing = false;
         let x = 0;
         let y = 0;
         let paths = [];
+        let undonePaths = [];
         let currentPath = [];
 
         // Mouse events
@@ -63,6 +73,7 @@
                 paths.push([...currentPath]);
                 currentPath = [];
                 isDrawing = false;
+                undonePaths = [];
             }
         });
 
@@ -71,6 +82,7 @@
                 paths.push([...currentPath]);
                 currentPath = [];
                 isDrawing = false;
+                undonePaths = [];
             }
         });
 
@@ -101,6 +113,7 @@
                 paths.push([...currentPath]);
                 currentPath = [];
                 isDrawing = false;
+                undonePaths = [];
             }
         });
 
@@ -109,20 +122,41 @@
                 paths.push([...currentPath]);
                 currentPath = [];
                 isDrawing = false;
+                undonePaths = [];
             }
         });
 
         undoButton.addEventListener('click', () => {
             if (paths.length > 0) {
-                paths.pop();
+                undonePaths.push(paths.pop());
                 redraw();
             }
         });
 
+        redoButton.addEventListener('click', () => {
+            if (undonePaths.length > 0) {
+                paths.push(undonePaths.pop());
+                redraw();
+            }
+        });
+
+        saveButton.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            ctx.strokeStyle = e.target.value;
+        });
+
+        brushSize.addEventListener('input', (e) => {
+            ctx.lineWidth = e.target.value;
+        });
+
         function drawLine(ctx, x1, y1, x2, y2) {
             ctx.beginPath();
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.stroke();
@@ -132,9 +166,13 @@
         function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (const path of paths) {
-                for (let i = 0; i < path.length - 1; i++) {
-                    drawLine(ctx, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y);
+                ctx.beginPath();
+                ctx.moveTo(path[0].x, path[0].y);
+                for (let i = 1; i < path.length; i++) {
+                    ctx.lineTo(path[i].x, path[i].y);
                 }
+                ctx.stroke();
+                ctx.closePath();
             }
         }
     </script>
