@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,6 +39,7 @@
         let paths = [];
         let currentPath = [];
 
+        // Mouse events
         canvas.addEventListener('mousedown', (e) => {
             x = e.offsetX;
             y = e.offsetY;
@@ -66,6 +67,44 @@
         });
 
         canvas.addEventListener('mouseout', () => {
+            if (isDrawing === true) {
+                paths.push([...currentPath]);
+                currentPath = [];
+                isDrawing = false;
+            }
+        });
+
+        // Touch events
+        canvas.addEventListener('touchstart', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            x = e.touches[0].clientX - rect.left;
+            y = e.touches[0].clientY - rect.top;
+            isDrawing = true;
+            currentPath = [{ x, y }];
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDrawing === true) {
+                const rect = canvas.getBoundingClientRect();
+                const newX = e.touches[0].clientX - rect.left;
+                const newY = e.touches[0].clientY - rect.top;
+                drawLine(ctx, x, y, newX, newY);
+                x = newX;
+                y = newY;
+                currentPath.push({ x, y });
+                e.preventDefault();
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            if (isDrawing === true) {
+                paths.push([...currentPath]);
+                currentPath = [];
+                isDrawing = false;
+            }
+        });
+
+        canvas.addEventListener('touchcancel', () => {
             if (isDrawing === true) {
                 paths.push([...currentPath]);
                 currentPath = [];
