@@ -29,6 +29,7 @@
         <button id="undoButton">되돌리기</button>
         <button id="redoButton">되돌린 걸 되돌리기</button>
         <button id="saveButton">저장</button>
+        <button id="fillButton">색채우기</button>
         <input type="color" id="colorPicker" value="#000000">
         <input type="range" id="brushSize" min="1" max="10" value="2">
     </div>
@@ -39,6 +40,7 @@
         const undoButton = document.getElementById('undoButton');
         const redoButton = document.getElementById('redoButton');
         const saveButton = document.getElementById('saveButton');
+        const fillButton = document.getElementById('fillButton');
         const colorPicker = document.getElementById('colorPicker');
         const brushSize = document.getElementById('brushSize');
 
@@ -48,6 +50,7 @@
         let paths = [];
         let undonePaths = [];
         let currentPath = [];
+        let fillColor = null; // 색채우기 기능을 위한 변수
 
         // Mouse events
         canvas.addEventListener('mousedown', (e) => {
@@ -70,19 +73,21 @@
 
         canvas.addEventListener('mouseup', () => {
             if (isDrawing === true) {
-                paths.push([...currentPath]);
+                paths.push({ path: [...currentPath], fillColor });
                 currentPath = [];
                 isDrawing = false;
                 undonePaths = [];
+                fillColor = null; // 색채우기 종료
             }
         });
 
         canvas.addEventListener('mouseout', () => {
             if (isDrawing === true) {
-                paths.push([...currentPath]);
+                paths.push({ path: [...currentPath], fillColor });
                 currentPath = [];
                 isDrawing = false;
                 undonePaths = [];
+                fillColor = null; // 색채우기 종료
             }
         });
 
@@ -110,19 +115,21 @@
 
         canvas.addEventListener('touchend', () => {
             if (isDrawing === true) {
-                paths.push([...currentPath]);
+                paths.push({ path: [...currentPath], fillColor });
                 currentPath = [];
                 isDrawing = false;
                 undonePaths = [];
+                fillColor = null; // 색채우기 종료
             }
         });
 
         canvas.addEventListener('touchcancel', () => {
             if (isDrawing === true) {
-                paths.push([...currentPath]);
+                paths.push({ path: [...currentPath], fillColor });
                 currentPath = [];
                 isDrawing = false;
                 undonePaths = [];
+                fillColor = null; // 색채우기 종료
             }
         });
 
@@ -147,6 +154,10 @@
             link.click();
         });
 
+        fillButton.addEventListener('click', () => {
+            fillColor = colorPicker.value; // 색채우기 색상 설정
+        });
+
         colorPicker.addEventListener('input', (e) => {
             ctx.strokeStyle = e.target.value;
         });
@@ -163,16 +174,25 @@
             ctx.closePath();
         }
 
+        function drawShape(ctx, path, fillColor) {
+            if (path.length === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+            ctx.closePath();
+            if (fillColor) {
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+            }
+            ctx.stroke();
+        }
+
         function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (const path of paths) {
-                ctx.beginPath();
-                ctx.moveTo(path[0].x, path[0].y);
-                for (let i = 1; i < path.length; i++) {
-                    ctx.lineTo(path[i].x, path[i].y);
-                }
-                ctx.stroke();
-                ctx.closePath();
+            for (const { path, fillColor } of paths) {
+                drawShape(ctx, path, fillColor);
             }
         }
     </script>
