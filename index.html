@@ -48,21 +48,28 @@
 
         canvas.addEventListener('mousemove', (e) => {
             if (isDrawing === true) {
-                drawLine(ctx, x, y, e.offsetX, e.offsetY);
-                x = e.offsetX;
-                y = e.offsetY;
+                const newX = e.offsetX;
+                const newY = e.offsetY;
+                drawLine(ctx, x, y, newX, newY);
+                x = newX;
+                y = newY;
                 currentPath.push({ x, y });
             }
         });
 
-        canvas.addEventListener('mouseup', (e) => {
+        canvas.addEventListener('mouseup', () => {
             if (isDrawing === true) {
-                drawLine(ctx, x, y, e.offsetX, e.offsetY);
-                x = 0;
-                y = 0;
-                isDrawing = false;
                 paths.push([...currentPath]);
                 currentPath = [];
+                isDrawing = false;
+            }
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            if (isDrawing === true) {
+                paths.push([...currentPath]);
+                currentPath = [];
+                isDrawing = false;
             }
         });
 
